@@ -9,11 +9,17 @@
 
 #define CROW_BAUDRATE B115200
 
+#define CROW_CLOCK_TICK "^^change(1,1)"
+#define CROW_CLOCK_TICK_LEN (sizeof(CROW_CLOCK_TICK) - 1)
+
 struct dev_crow {
     struct dev_common base;
     int fd;
     struct termios oldtio, newtio;
-    char line[255];
+    char line[256];
+    // tail of the previous read, so a clock tick split across reads is still found
+    char clock_carry[CROW_CLOCK_TICK_LEN - 1];
+    size_t clock_carry_len;
 };
 
 extern int dev_crow_init(void *self);

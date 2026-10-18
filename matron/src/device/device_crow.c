@@ -81,10 +81,31 @@ static void handle_event(uint8_t id, char *data, ssize_t len) {
     memcpy(ev->crow_event.data, data, len);
     ev->crow_event.len = len;
     event_post(ev);
+}
 
-    if (strstr(data, "^^change(1,1)")) {
+static void handle_clock_ticks(struct dev_crow *d, const char *data, ssize_t len) {
+    char buf[sizeof(d->clock_carry) + sizeof(d->line) + 1];
+    size_t buf_len = d->clock_carry_len + len;
+    memcpy(buf, d->clock_carry, d->clock_carry_len);
+    memcpy(buf + d->clock_carry_len, data, len);
+    buf[buf_len] = 0;
+
+    // count every tick, as multiple can arrive in one read
+    const char *search_end = buf;
+    const char *match;
+    while ((match = strstr(search_end, CROW_CLOCK_TICK)) != NULL) {
         clock_crow_handle_clock();
+        search_end = match + CROW_CLOCK_TICK_LEN;
     }
+
+    // carry is shorter than a tick and excludes counted ticks, so no tick is counted twice
+    size_t keep = buf_len < sizeof(d->clock_carry) ? buf_len : sizeof(d->clock_carry);
+    const char *carry_start = buf + buf_len - keep;
+    if (carry_start < search_end) {
+        carry_start = search_end;
+    }
+    d->clock_carry_len = buf + buf_len - carry_start;
+    memcpy(d->clock_carry, carry_start, d->clock_carry_len);
 }
 
 void *dev_crow_start(void *self) {
@@ -97,6 +118,7 @@ void *dev_crow_start(void *self) {
         len = read(di->fd, di->line, 255);
         if (len > 0) {
             di->line[len] = 0; // add null to end of string
+            handle_clock_ticks(di, di->line, len);
             if (len > 1) {
                 // fprintf(stderr,"crow> %s", di->line);
                 handle_event(base->id, di->line, len);
