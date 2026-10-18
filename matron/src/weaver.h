@@ -47,7 +47,7 @@ extern void w_handle_midi_event(int id, uint8_t *data, size_t nbytes);
 
 extern void w_handle_crow_add(void *dev);
 extern void w_handle_crow_remove(int id);
-extern void w_handle_crow_event(void *dev, int id);
+extern void w_handle_crow_event(int id, char *data, ssize_t len);
 
 extern void w_handle_serial_add(void *dev);
 extern void w_handle_serial_remove(uint32_t id, char *handler_id);

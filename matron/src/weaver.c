@@ -2416,11 +2416,10 @@ void w_handle_crow_remove(int id) {
     l_report(lvm, l_docall(lvm, 1, 0));
 }
 
-void w_handle_crow_event(void *dev, int id) {
-    struct dev_crow *d = (struct dev_crow *)dev;
+void w_handle_crow_event(int id, char *data, ssize_t len) {
     _push_norns_func("crow", "event");
     lua_pushinteger(lvm, id + 1); // convert to 1-base
-    lua_pushstring(lvm, d->line);
+    lua_pushlstring(lvm, data, len);
     l_report(lvm, l_docall(lvm, 2, 0));
 }
 

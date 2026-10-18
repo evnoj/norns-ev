@@ -145,6 +145,10 @@ MATRON_API void event_data_free(union event_data *ev) {
     case EVENT_SERIAL_REMOVE:
         free(ev->serial_remove.handler_id);
         break;
+    case EVENT_CROW_EVENT:
+        free(ev->crow_event.data);
+        ev->crow_event.data = NULL;
+        break;
     case EVENT_SERIAL_EVENT:
         free(ev->serial_event.data);
         ev->serial_event.data = NULL;
@@ -331,7 +335,7 @@ static void handle_event(union event_data *ev) {
         w_handle_crow_remove(ev->crow_remove.id);
         break;
     case EVENT_CROW_EVENT:
-        w_handle_crow_event(ev->crow_event.dev, ev->crow_event.id);
+        w_handle_crow_event(ev->crow_event.id, ev->crow_event.data, ev->crow_event.len);
         break;
     case EVENT_SOFTCUT_RENDER:
         w_handle_softcut_render(ev->softcut_render.idx, ev->softcut_render.sec_per_sample, ev->softcut_render.start, ev->softcut_render.size, ev->softcut_render.data);

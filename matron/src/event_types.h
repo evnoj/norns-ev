@@ -336,9 +336,10 @@ struct event_crow_remove {
 
 struct event_crow_event {
     struct event_common common;
-    void *dev;
     uint8_t id;
-}; // +5
+    char *data;
+    ssize_t len;
+}; // +12
 
 struct event_system_cmd {
     struct event_common common;

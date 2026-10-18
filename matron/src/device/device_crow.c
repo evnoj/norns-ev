@@ -74,14 +74,15 @@ int dev_crow_init(void *self) {
     return 0;
 }
 
-static void handle_event(void *dev, uint8_t id) {
+static void handle_event(uint8_t id, char *data, ssize_t len) {
     union event_data *ev = event_data_new(EVENT_CROW_EVENT);
-    ev->crow_event.dev = dev;
     ev->crow_event.id = id;
+    ev->crow_event.data = (char *)malloc(len);
+    memcpy(ev->crow_event.data, data, len);
+    ev->crow_event.len = len;
     event_post(ev);
 
-    struct dev_crow *d = (struct dev_crow *)dev;
-    if (strstr(d->line, "^^change(1,1)")) {
+    if (strstr(data, "^^change(1,1)")) {
         clock_crow_handle_clock();
     }
 }
@@ -90,7 +91,7 @@ void *dev_crow_start(void *self) {
     struct dev_crow *di = (struct dev_crow *)self;
     struct dev_common *base = (struct dev_common *)self;
 
-    uint8_t len;
+    ssize_t len;
 
     while (1) {
         len = read(di->fd, di->line, 255);
@@ -98,7 +99,7 @@ void *dev_crow_start(void *self) {
             di->line[len] = 0; // add null to end of string
             if (len > 1) {
                 // fprintf(stderr,"crow> %s", di->line);
-                handle_event(self, base->id);
+                handle_event(base->id, di->line, len);
             }
             len = 0;
         }
